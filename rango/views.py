@@ -13,10 +13,12 @@ from django.contrib.auth import logout
 
 
 def index(request):
+    request.session.set_test_cookie()
     # Construct a dictionary to pass to the template engine as its context.
     # Note the key boldmessage is the same as {{ boldmessage }} in the template!
     category_list = Category.objects.order_by('-likes')[:5]
     pages_list = Page.objects.order_by('-views')[:5]
+
 
     context_dict = {'categories': category_list, 'pages':pages_list}
 
@@ -26,6 +28,9 @@ def index(request):
     return render(request, 'rango/index.html', context=context_dict)
 
 def about(request):
+	if request.session.test_cookie_worked():
+		print("TEST COOKIE WORKED!")
+		request.session.delete_test_cookie()
 	# prints out whether the method is a GET or a POST
 	print(request.method)
 	# prints out the user name, if no one is logged in it prints `AnonymousUser`
@@ -62,7 +67,8 @@ def show_category(request, category_name_slug):
     
     # Go render the response and return it to the client.
     return render(request, 'rango/category.html', context_dict)
-	
+
+@login_required	
 def add_category(request):
     form = CategoryForm()
     
@@ -87,7 +93,8 @@ def add_category(request):
     # Will handle the bad form, new form, or no form supplied cases.
     # Render the form with error messages (if any).
     return render(request, 'rango/add_category.html', {'form': form})
-	
+
+@login_required
 def add_page(request, category_name_slug):
     try:
         category = Category.objects.get(slug=category_name_slug)
@@ -109,6 +116,7 @@ def add_page(request, category_name_slug):
     
     context_dict = {'form':form, 'category': category}
     return render(request, 'rango/add_page.html', context_dict)
+	
 
 	
 def register(request):
@@ -206,7 +214,7 @@ def user_login(request):
 		
 @login_required
 def restricted(request):
-    return HttpResponse("Since you're logged in, you can see this text!")
+    return render(request, 'rango/retricted.html', {})
 	
 @login_required
 def user_logout(request):
